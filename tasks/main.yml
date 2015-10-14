@@ -1,0 +1,38 @@
+- name: Add the DataStax repository key
+  apt_key: url=http://debian.datastax.com/debian/repo_key
+
+- name: Add the DataStax Community repository
+  apt_repository: repo='deb http://debian.datastax.com/community stable main' update_cache=yes
+
+- name: install opscenter
+  apt: name=opscenter
+  
+- name: put opscenterd.conf 
+  template: src=opscenterd.conf dest=/etc/opscenter/opscenterd.conf
+  register: opscenter_conf
+
+- name: start or restart opscenterd
+  service: name=opscenterd enabled=yes state={{ 'restarted' if opscenter_conf.changed else 'started' }}
+
+# - name: create opscenter
+#   file: dest=/opt/opscenter state=directory
+#
+# - name: install dependencies
+#   apt: name=curl
+#
+# - name: get version
+#   shell: curl -v http://downloads.datastax.com/community/opscenter.tar.gz 2>&1 |grep Location|sed -E 's/.*opscenter-(.*).tar.gz/\1/'
+#   register: version
+#   changed_when: no
+#
+# - name: download dsc
+#   get_url: url=http://downloads.datastax.com/community/opscenter-{{ version.stdout }}.tar.gz
+#            dest=/opt/opscenter/opscenter-{{ version.stdout }}.tar.gz
+#
+# - name: unarchive dsc
+#   unarchive: src=/opt/opscenter/opscenter-{{ version.stdout }}.tar.gz
+#              dest=/opt/opscenter/ copy=no creates=/opt/opscenter/opscenter-{{ version.stdout }}
+#              owner=root
+#
+# - name: create symlink for opscenter
+#   file: state=link src=opscenter-{{ version.stdout }} dest=/opt/opscenter/opscenter
